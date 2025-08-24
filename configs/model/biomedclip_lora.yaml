@@ -1,0 +1,33 @@
+# configs/model/biomedclip_lora.yaml
+
+_target_: src.models.BaseModule
+
+net:
+  # This is the crucial line that points to your new file and class
+  _target_: src.models.biomedclip_lora.BiomedCLIPSegLoRA # Assumes your class is named BiomedCLIPSegLoRA
+
+  biomedclip_hf_api: ${extras.biomedclip_hf_api}
+  clipseg_hf_api: ${extras.clipseg_hf_api}
+
+  # LoRA parameters are now part of the model's config
+  lora:
+    r: 8
+    lora_alpha: 16
+    lora_dropout: 0.1
+
+loss_fn: 
+  _target_: monai.losses.DiceFocalLoss
+  lambda_dice: 1.0
+  lambda_ce: 0.2
+
+optimizer:
+  _target_: torch.optim.AdamW
+  _partial_: true
+  lr: 1e-4 # LoRA often works better with a different LR
+  weight_decay: 0.001
+
+scheduler:
+  _target_: torch.optim.lr_scheduler.ReduceLROnPlateau
+  _partial_: true
+  factor: 0.1
+  patience: 5
